@@ -1,23 +1,8 @@
 #!/bin/bash
 
-# 결과 파일 경로 설정
-current_time=$(date +"%Y%m%d_%H%M%S")
-resultfile="/tmp/security_check_$current_time.txt"
+resultfile="Results_$(date '+%F_%H:%M:%S').json"
+echo "[" > $resultfile
 
-# 파일 생성 및 권한 설정
-touch "$resultfile"
-chmod 644 "$resultfile"
-
-
-# run_command 함수 정의
-run_command() {
-    eval "$1"
-}
-
-# 결과 저장 함수 추가
-save_result() {
-    echo "$1" >> "$resultfile"
-}
 
 U_01() {
 	echo ""  >> $resultfile 2>&1
@@ -3773,8 +3758,7 @@ U_70
 U_71
 U_72
 
-echo "작업완료"  >> $resultfile 2>&1
-echo "진단이 완료되었습니다. 결과 파일: $resultfile"
+echo ""  >> $resultfile 2>&1
 echo "================================ 진단 결과 요약 ================================" >> $resultfile 2>&1
 echo ""  >> $resultfile 2>&1
 echo "                              ★ 항목 개수 = `cat $resultfile | grep '결과 : ' | wc -l`" >> $resultfile 2>&1
@@ -3784,3 +3768,11 @@ echo "                              ☆ N/A 개수 = `cat $resultfile | grep '�
 echo ""  >> $resultfile 2>&1
 echo "==============================================================================" >> $resultfile 2>&1
 echo ""  >> $resultfile 2>&1
+
+# JSON 마지막 쉼표 제거 및 배열 닫기
+sed -i '$ s/},/}/' $resultfile  # 마지막 항목 쉼표 제거
+echo "]" >> $resultfile         # JSON 배열 닫기
+
+# JSON 파일을 Flask 서버로 전송
+curl -X POST -H "Content-Type: application/json" \
+-d @${resultfile} http://3.84.34.121:5000/upload
