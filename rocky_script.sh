@@ -3775,4 +3775,4 @@ echo "]" >> $resultfile         # JSON 배열 닫기
 
 # JSON 파일을 Flask 서버로 전송
 curl -X POST -H "Content-Type: application/json" \
--d @${resultfile} http://3.84.34.121:5000/upload
+-d @${resultfile} http://3.39.6.183:5000/upload
