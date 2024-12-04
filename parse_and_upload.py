@@ -1,3 +1,8 @@
+import json
+import requests
+import sys
+import os
+
 def parse_txt_to_json(txt_file):
     data = []
     current_item = {}
@@ -44,3 +49,44 @@ def parse_txt_to_json(txt_file):
         data.append(current_item)
 
     return data
+
+def save_json_to_file(json_data, txt_file):
+    # JSON 파일 이름 생성
+    base_name = os.path.basename(txt_file)
+    json_file = os.path.join("/tmp/results", f"{os.path.splitext(base_name)[0]}.json")
+    
+    # JSON 데이터 저장
+    print(f"Saving JSON data to: {json_file}")  # 디버깅용 출력
+    with open(json_file, "w", encoding="utf-8") as file:
+        json.dump(json_data, file, ensure_ascii=False, indent=4)
+    
+    print(f"JSON 파일 저장 완료: {json_file}")
+    return json_file
+
+def upload_json(json_file, server_url):
+    # JSON 파일 로드 후 업로드
+    try:
+        with open(json_file, "r", encoding="utf-8") as file:
+            json_data = json.load(file)
+
+        print("Uploading JSON data:", json.dumps(json_data, ensure_ascii=False, indent=4))  # 디버깅용 출력
+        response = requests.post(server_url, json=json_data, headers={"Content-Type": "application/json"})
+        if response.status_code == 200:
+            print("JSON 데이터 업로드 성공!")
+        else:
+            print(f"업로드 실패: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"Error during upload: {str(e)}")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print("사용법: python3 parse_and_upload.py <txt_file> <server_url>")
+        sys.exit(1)
+
+    txt_file = sys.argv[1]
+    server_url = sys.argv[2]
+
+    print(f"Parsing TXT file: {txt_file}")  # 디버깅용 출력
+    json_data = parse_txt_to_json(txt_file)
+    json_file = save_json_to_file(json_data, txt_file)
+    upload_json(json_file, server_url)
