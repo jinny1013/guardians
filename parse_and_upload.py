@@ -20,36 +20,42 @@ def parse_txt_to_json(txt_file):
         # ID 및 카테고리 정보 파싱
         if line.startswith("▶ U-"):
             if current_item:  # 이전 항목 저장
+                # 현재 상태와 양호 판단 기준 기본값 처리
+                current_item.setdefault("current_status", "N/A")
+                current_item.setdefault("criteria", "N/A")
                 data.append(current_item)
             current_item = {}
 
             # ID 및 중요도 추출
             id_and_category = line.split("|")
             current_item["id"] = id_and_category[0].split("▶")[-1].strip()
-            current_item["importance"] = id_and_category[1].strip("()").strip()
+            current_item["importance"] = id_and_category[0].split("(")[-1].split(")")[0].strip()
 
             # 카테고리 및 점검 항목 처리
-            if len(id_and_category) > 2:
-                category = id_and_category[2].split(">")
-                current_item["category"] = category[0].strip()
-                current_item["check_item"] = category[1].strip() if len(category) > 1 else "N/A"
-            else:
-                current_item["category"] = "N/A"
-                current_item["check_item"] = "N/A"
+            category_info = id_and_category[1].strip()
+            category_split = category_info.split(">")
+            current_item["category"] = category_split[0].strip() if len(category_split) > 0 else "N/A"
+            current_item["check_item"] = category_split[1].strip() if len(category_split) > 1 else "N/A"
+
+        # 양호 판단 기준
+        elif line.startswith("양호 판단 기준"):
+            current_item["criteria"] = line.split("양호 판단 기준 :")[-1].strip()
 
         # 결과 파싱
         elif line.startswith("※"):
-            current_item["result"] = line.split("결과 :")[1].strip()
+            current_item["result"] = line.split("결과 :")[-1].strip()
 
         # 상태 설명 추가
         elif current_item and "result" in current_item:
-            if "details" not in current_item:
-                current_item["details"] = line
+            if "current_status" not in current_item:
+                current_item["current_status"] = line
             else:
-                current_item["details"] += f" {line}"
+                current_item["current_status"] += f" {line}"
 
     # 마지막 항목 저장
     if current_item:
+        current_item.setdefault("current_status", "N/A")
+        current_item.setdefault("criteria", "N/A")
         data.append(current_item)
 
     return data
