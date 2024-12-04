@@ -5,6 +5,7 @@ import os
 
 def parse_txt_to_json(txt_file):
     data = []
+    summary = {}
     current_item = {}
 
     with open(txt_file, "r", encoding="utf-8") as file:
@@ -16,6 +17,17 @@ def parse_txt_to_json(txt_file):
         # 빈 줄이나 불필요한 헤더/푸터 무시
         if not line or line.startswith("#") or line.startswith("점검일") or line.startswith("="):
             continue
+
+        # 진단 결과 요약 분리
+        if line.startswith("★ 항목 개수"):
+            summary["total_items"] = int(line.split("=")[-1].strip())
+        elif line.startswith("☆ 취약 개수"):
+            summary["vulnerable_items"] = int(line.split("=")[-1].strip())
+        elif line.startswith("★ 양호 개수"):
+            summary["good_items"] = int(line.split("=")[-1].strip())
+        elif line.startswith("☆ N/A 개수"):
+            summary["na_items"] = int(line.split("=")[-1].strip())
+            continue  # 진단 결과 요약 이후 항목 없음
 
         # ID 및 카테고리 정보 파싱
         if line.startswith("▶ U-"):
@@ -58,17 +70,23 @@ def parse_txt_to_json(txt_file):
         current_item.setdefault("criteria", "N/A")
         data.append(current_item)
 
-    return data
+    return data, summary
 
-def save_json_to_file(json_data, txt_file):
+def save_json_to_file(json_data, summary, txt_file):
     # JSON 파일 이름 생성
     base_name = os.path.basename(txt_file)
     json_file = os.path.join("/tmp/results", f"{os.path.splitext(base_name)[0]}.json")
     
+    # JSON 데이터 생성
+    output = {
+        "summary": summary,
+        "details": json_data
+    }
+
     # JSON 데이터 저장
     print(f"Saving JSON data to: {json_file}")  # 디버깅용 출력
     with open(json_file, "w", encoding="utf-8") as file:
-        json.dump(json_data, file, ensure_ascii=False, indent=4)
+        json.dump(output, file, ensure_ascii=False, indent=4)
     
     print(f"JSON 파일 저장 완료: {json_file}")
     return json_file
@@ -97,6 +115,6 @@ if __name__ == "__main__":
     server_url = sys.argv[2]
 
     print(f"Parsing TXT file: {txt_file}")  # 디버깅용 출력
-    json_data = parse_txt_to_json(txt_file)
-    json_file = save_json_to_file(json_data, txt_file)
+    json_data, summary = parse_txt_to_json(txt_file)
+    json_file = save_json_to_file(json_data, summary, txt_file)
     upload_json(json_file, server_url)
