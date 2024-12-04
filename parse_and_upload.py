@@ -21,13 +21,16 @@ def parse_txt_to_json(txt_file):
         # 진단 결과 요약 분리
         if line.startswith("★ 항목 개수"):
             summary["total_items"] = int(line.split("=")[-1].strip())
+            continue
         elif line.startswith("☆ 취약 개수"):
             summary["vulnerable_items"] = int(line.split("=")[-1].strip())
+            continue
         elif line.startswith("★ 양호 개수"):
             summary["good_items"] = int(line.split("=")[-1].strip())
+            continue
         elif line.startswith("☆ N/A 개수"):
             summary["na_items"] = int(line.split("=")[-1].strip())
-            continue  # 진단 결과 요약 이후 항목 없음
+            continue
 
         # ID 및 카테고리 정보 파싱
         if line.startswith("▶ U-"):
@@ -59,10 +62,12 @@ def parse_txt_to_json(txt_file):
 
         # 상태 설명 추가
         elif current_item and "result" in current_item:
-            if "current_status" not in current_item:
-                current_item["current_status"] = line
-            else:
-                current_item["current_status"] += f" {line}"
+            # 진단 결과 요약이 아닌 경우에만 추가
+            if not line.startswith("★") and not line.startswith("☆"):
+                if "current_status" not in current_item:
+                    current_item["current_status"] = line
+                else:
+                    current_item["current_status"] += f" {line}"
 
     # 마지막 항목 저장
     if current_item:
