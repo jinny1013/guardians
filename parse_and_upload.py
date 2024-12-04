@@ -19,7 +19,7 @@ def parse_txt_to_json(txt_file):
 
         # ID 및 카테고리 정보 파싱
         if line.startswith("▶ U-"):
-            if current_item:  # 현재 항목 저장
+            if current_item:  # 이전 항목 저장
                 data.append(current_item)
             current_item = {}
 
@@ -27,11 +27,15 @@ def parse_txt_to_json(txt_file):
             id_and_category = line.split("|")
             current_item["id"] = id_and_category[0].split("▶")[-1].strip()
             current_item["importance"] = id_and_category[1].strip("()").strip()
-            category = id_and_category[2].split(">")
 
-            # 카테고리와 점검 항목
-            current_item["category"] = category[0].strip()
-            current_item["check_item"] = category[1].strip()
+            # 카테고리 및 점검 항목 처리
+            if len(id_and_category) > 2:
+                category = id_and_category[2].split(">")
+                current_item["category"] = category[0].strip()
+                current_item["check_item"] = category[1].strip() if len(category) > 1 else "N/A"
+            else:
+                current_item["category"] = "N/A"
+                current_item["check_item"] = "N/A"
 
         # 결과 파싱
         elif line.startswith("※"):
