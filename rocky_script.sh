@@ -3770,6 +3770,5 @@ echo "==========================================================================
 echo ""  >> $resultfile 2>&1
 
 
-# JSON 파일을 Flask 서버로 전송
-curl -X POST -H "Content-Type: application/json" \
--d @${resultfile} http://3.39.6.183:5000/upload
+# 진단 완료 메시지 출력
+echo "진단이 완료되었습니다. 결과 파일: $resultfile"
