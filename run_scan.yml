@@ -13,23 +13,29 @@
       shell: bash /tmp/rocky_script.sh
       register: scan_result
 
-    # 3. 결과 파일을 세마포어 서버로 가져오기
+    # 3. 결과 파일 이름 찾기 (와일드카드 사용)
+    - name: Find results file
+      shell: ls /tmp/results_*.txt
+      register: result_files
+      failed_when: result_files.stdout == ""
+      changed_when: false
+
+    # 4. 결과 파일을 세마포어 서버로 가져오기
     - name: Fetch results to Semaphore server
       fetch:
-        src: /tmp/results_*.txt
+        src: "{{ item }}"
         dest: /tmp/results/
         flat: yes
+      loop: "{{ result_files.stdout_lines }}"
 
-    # 4. Rocky 서버에서 결과 파일과 스크립트 삭제
+    # 5. Rocky 서버에서 결과 파일과 스크립트 삭제
     - name: Clean up temporary files on Rocky server
       shell: rm -rf /tmp/rocky_script.sh /tmp/results_*.txt
 
-    # 5. Python 스크립트를 사용하여 JSON 추출 및 웹 서버 전송
+    # 6. Python 스크립트를 사용하여 JSON 추출 및 웹 서버 전송
     - name: Convert results to JSON and upload to web server
       delegate_to: localhost
-      command: python3 /home/guardians/parse_and_upload.py /tmp/results/results_*.txt http://3.39.6.183:5000/upload
-
-    # 6. 진단 완료 알림 표시
-    - name: Notify scan completion
-      debug:
-        msg: "Vulnerability scan completed successfully! Results are available on the web server."
+      command: python3 /home/guardians/parse_and_upload.py /tmp/results/{{ item | basename }} http://3.39.6.183:5000/upload
+      loop: "{{ result_files.stdout_lines }}"
+      loop_control:
+        label: "{{ item | basename }}"
