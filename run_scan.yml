@@ -35,7 +35,7 @@
     # 6. Python 스크립트를 사용하여 JSON 추출 및 웹 서버 전송
     - name: Convert results to JSON and upload to web server
       delegate_to: localhost
-      command: python3 /home/guardians/parse_and_upload.py /tmp/results/{{ item | basename }} http://3.39.6.183:5000/upload
+      command: python3 /home/guardians/parse_and_upload.py /tmp/results/{{ item | basename }} http://15.165.97.115:5000/upload
       loop: "{{ result_files.stdout_lines }}"
       loop_control:
         label: "{{ item | basename }}"
