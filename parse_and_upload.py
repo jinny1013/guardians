@@ -34,7 +34,7 @@ def upload_json(data, server_url):
         print(f"업로드 실패: {response.status_code} - {response.text}")
 
 if __name__ == "__main__":
-    txt_file = sys.argv[1]  # txt 파일 경로
-    server_url = sys.argv[2]  # 웹 서버 URL
+    txt_file = sys.argv[1]
+    server_url = sys.argv[2]
     json_data = parse_txt_to_json(txt_file)
     upload_json(json_data, server_url)
