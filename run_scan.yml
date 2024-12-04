@@ -1,24 +1,29 @@
-- hosts: rocky_servers
-  become: true
+- name: Run vulnerability scan
+  hosts: rocky_servers
   tasks:
-    - name: Copy vulnerability scan script to remote servers
+    # 1. 진단 스크립트를 Rocky 서버의 임시 디렉터리로 복사
+    - name: Copy script to temporary directory
       copy:
-        src: rocky_script.sh
+        src: /path/to/rocky_script.sh
         dest: /tmp/rocky_script.sh
         mode: '0755'
 
-    - name: Run vulnerability scan script
-      command: /tmp/rocky_script.sh
-      register: scan_output
+    # 2. 임시 디렉터리에서 진단 스크립트 실행
+    - name: Execute vulnerability scan script
+      shell: bash /tmp/rocky_script.sh
 
-    - name: Save scan output to a log file on the remote server
-      copy:
-        content: "{{ scan_output.stdout }}"
-        dest: /var/log/vulnerability_scan.log
-
-    - name: Fetch scan output to local machine
+    # 3. 결과 파일을 세마포어 서버로 가져오기
+    - name: Fetch results to Semaphore server
       fetch:
-        src: /var/log/vulnerability_scan.log
-        dest: ./scan_results/{{ inventory_hostname }}_vulnerability_scan.log
+        src: /tmp/results_*.txt
+        dest: /tmp/results/
         flat: yes
 
+    # 4. Rocky 서버에서 스크립트와 결과 파일 정리
+    - name: Clean up temporary files
+      shell: rm -rf /tmp/rocky_script.sh /tmp/results_*.txt
+
+    # 5. 진단 완료 알림 표시
+    - name: Notify scan completion
+      debug:
+        msg: "Vulnerability scan completed successfully! Results are available on the Semaphore server."
