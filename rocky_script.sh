@@ -1,7 +1,7 @@
 #!/bin/bash
 
-resultfile="Results_$(date '+%F_%H:%M:%S').json"
-echo "[" > $resultfile
+# 결과 파일 (세마포어 서버에 저장)
+resultfile="/tmp/results_$(date '+%F_%H-%M-%S').txt"
 
 
 U_01() {
@@ -3769,9 +3769,6 @@ echo ""  >> $resultfile 2>&1
 echo "==============================================================================" >> $resultfile 2>&1
 echo ""  >> $resultfile 2>&1
 
-# JSON 마지막 쉼표 제거 및 배열 닫기
-sed -i '$ s/},/}/' $resultfile  # 마지막 항목 쉼표 제거
-echo "]" >> $resultfile         # JSON 배열 닫기
 
 # JSON 파일을 Flask 서버로 전송
 curl -X POST -H "Content-Type: application/json" \
